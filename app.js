@@ -47,10 +47,14 @@ app.post('/register', async (req, res) => {
     });
 });
 
-app.post('/login', async (req, res) => {
+app.post('/login', (req, res) => {
     const { email, password } = req.body;
-    try {
-        let user = await userModel.findOne({ email });
+
+    userModel.findOne({ email }, (err, user) => {
+        if (err) {
+            return res.status(500).send('Server error');
+        }
+
         if (!user) {
             return res.status(400).send('Invalid email or password');
         }
@@ -64,15 +68,14 @@ app.post('/login', async (req, res) => {
                 // Create JWT token
                 const token = jwt.sign({ userid: user._id, email: user.email }, 'shsh');
                 res.cookie('token', token);
-                res.status(200).send('Login successful');
+                return res.status(200).send('Login successful');
             } else {
-                res.status(401).send('Invalid email or password');
+                return res.status(401).send('Invalid email or password');
             }
         });
-    } catch (err) {
-        res.status(500).send('Internal Server Error');
-    }
+    });
 });
+
 
 app.get('/logout', (req, res) => {
     res.clearCookie('token'); // clear the cookie properly

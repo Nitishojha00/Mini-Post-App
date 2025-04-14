@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile</title>
+  <link rel="stylesheet" href="/stylesheets/profile.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="profile-container">
+    <header>
+      <h1>Welcome, <%= user.name %>!</h1>
+      <a href="/logout" class="logout-btn">Logout</a>
+    </header>
+
+    <section class="create-post">
+      <h2>Create Post</h2>
+      <form method="POST" action="/create-post">
+        <textarea name="content" placeholder="Write something..." required></textarea>
+        <button type="submit">Post</button>
+      </form>
+    </section>
+
+    <section class="user-posts">
+        <h2>Your Posts</h2>
+        <% if (posts.length > 0) { %>
+          <div class="posts">
+            <% posts.forEach(post => { %>
+              <div class="post">
+                <p>
+                  <strong><%= post.user.username %></strong><br>
+                  <%= post.content %><br>
+                  <span class="like-count" data-post-id="<%= post._id %>">Likes: <%= post.likes.length %></span>
+                </p>
+                <div class="post-actions">
+                  <!-- Like button -->
+                  <button class="like-button" data-post-id="<%= post._id %>">
+                    <%= post.likes.includes(user._id) ? 'Unlike' : 'Like' %>
+                  </button>
+
+                  <!-- Edit button -->
+                  <% if (post.user._id.toString() === user._id.toString()) { %>
+                    <a href="/edit-post/<%= post._id %>" class="edit-button">Edit</a>
+                  <% } %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p>You haven't posted anything yet.</p>
+        <% } %>
+      </section>
+  </div>
+
+  <!-- Include jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script>
+    // Handle the like/unlike button click
+    $(".like-button").on("click", function() {
+      const postId = $(this).data('post-id');
+      const button = $(this);
+
+      // Send an AJAX request to the server to toggle like status
+      $.ajax({
+        url: `/like/${postId}`,
+        type: 'GET',
+        success: function(response) {
+          if (response.error) {
+            alert(response.error); // Handle error if postId is invalid or not found
+          } else {
+            // Update the like count and button text based on response
+            button.text(response.isLiked ? 'Unlike' : 'Like');
+            button.siblings('.like-count').text(`Likes: ${response.likes}`);
+          }
+        },
+        error: function() {
+          alert('Something went wrong');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
